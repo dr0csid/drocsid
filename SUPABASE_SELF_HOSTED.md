@@ -65,7 +65,7 @@ Correct behavior:
 - `GOTRUE_SITE_URL` must point to the Drocsid app URL:
   - `https://drocsid.yourdomain.com`
 
-Google callback behavior:
+Google callback behavior (if you want to enable Google Auth):
 
 - Google OAuth callback must point to:
   - `https://supabase.yourdomain.com/auth/v1/callback`
@@ -84,13 +84,10 @@ Verify these points in your self-hosted auth config:
 - Google provider credentials are configured correctly only if Google OAuth is enabled
 - cookies are configured for secure HTTPS delivery where appropriate
 
-If you support Electron and local development flows, include the URLs you actually need in the allow list. The public documentation model also assumes a separate React Native + Expo mobile app, but mobile deep-link values should be documented in the mobile project where they are actually used.
-
-## Google OAuth configuration
+## Google OAuth configuration (Only if you want to enable Google Auth)
 
 In Google Cloud Console:
 
-- authorized JavaScript origins should match your public web domains where applicable
 - authorized redirect URI must include:
   - `https://supabase.yourdomain.com/auth/v1/callback`
 
@@ -100,18 +97,17 @@ After Supabase is running:
 
 1. Open Supabase Studio.
 2. Navigate to the **SQL Editor**.
-3. Load the contents of the `supabase.sql` schema file (located at the root of this project).
-4. Replace "admin@example.com" placeholder value in the `supabase.sql` by your email before running it.
-5. Run the entire script to execute and apply the schema (tables, foreign keys, functions, and real-time triggers) to your database.
+3. Load the contents of the `supabase.sql` schema file (located at the root of this project) and Replace "admin@example.com" placeholder value in the `supabase.sql` by your email.
+4. Run the entire script to execute and apply the schema (tables, foreign keys, functions, and real-time triggers) to your database.
 
 ## Storage buckets
 
 Typical Drocsid buckets:
 
 - `avatars`
-- `attachments`
+- `chat-attachments`
 - `server-icons`
-- `emojis` if enabled in your build
+- `soundboard`
 
 Verify that the bucket names, visibility, and storage policies match your app and SQL schema expectations.
 
@@ -128,8 +124,8 @@ docker compose logs -f db
 
 If auth redirects fail:
 
-- verify `GOTRUE_SITE_URL`
-- verify the Google callback URI
+- verify `GOTRUE_SITE_URL` in the config file
+- verify the Google callback URI (for people who want Google Auth to be enabled)
 - verify the GoTrue allow list
 - restart the stack after changing auth-related config
 
