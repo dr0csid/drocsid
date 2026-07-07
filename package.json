@@ -1,0 +1,117 @@
+{
+  "name": "drocsid",
+  "description": "A modern real-time communication platform for communities.",
+  "author": "Shaco",
+  "private": true,
+  "version": "1.0.4",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "postinstall": "electron-builder install-app-deps || echo 'Skipping Electron app deps installation (non-desktop workspace)'",
+    "dev": "tsx server.ts",
+    "start": "tsx server.ts",
+    "build": "vite build",
+    "preview": "vite preview",
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit",
+    "electron:dev": "concurrently \"tsx server.ts\" \"wait-on tcp:3000 && cross-env ELECTRON_START_URL=http://localhost:3000 electron .\"",
+    "electron:build": "vite build && electron-builder --win",
+    "electron:build:linux": "electron-builder --linux",
+    "electron:build:mac": "electron-builder --mac",
+    "electron:rebuild": "electron-rebuild -f -w @livekit/rtc-node"
+  },
+  "build": {
+    "appId": "com.drocsid.app",
+    "productName": "Drocsid",
+    "asarUnpack": [
+      "**/node_modules/uiohook-napi/**/*",
+      "**/node_modules/@livekit/rtc-node/**/*"
+    ],
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "public/logo-bg.png"
+    ],
+    "extraResources": [
+      {
+        "from": "bin",
+        "to": "bin",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "guid": "drocsid-app-unique-guid-2024",
+      "shortcutName": "Drocsid",
+      "artifactName": "${productName}-Setup.${ext}"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "public/logo-bg.png",
+      "executableName": "Drocsid"
+    }
+  },
+  "dependencies": {
+    "@livekit/components-react": "^2.9.21",
+    "@livekit/rtc-node": "^0.13.24",
+    "@supabase/supabase-js": "^2.103.0",
+    "@tailwindcss/vite": "^4.1.14",
+    "@types/cors": "^2.8.19",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "@vitejs/plugin-react": "^5.0.4",
+    "clsx": "^2.1.1",
+    "cors": "^2.8.6",
+    "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
+    "emoji-picker-react": "^4.18.0",
+    "express": "^4.21.2",
+    "i18next": "^26.0.7",
+    "i18next-browser-languagedetector": "^8.2.1",
+    "jimp": "^1.6.1",
+    "livekit-client": "^2.18.10",
+    "livekit-server-sdk": "^2.15.2",
+    "lucide-react": "^0.546.0",
+    "motion": "^12.23.24",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-i18next": "^17.0.4",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.13.2",
+    "react-syntax-highlighter": "^16.1.1",
+    "react-virtuoso": "^4.18.4",
+    "recharts": "^3.8.1",
+    "rehype-raw": "^7.0.0",
+    "remark-breaks": "^4.0.0",
+    "remark-gfm": "^4.0.1",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "tailwind-merge": "^3.5.0",
+    "tsx": "^4.21.0",
+    "uiohook-napi": "^1.5.5",
+    "vite": "^6.2.0",
+    "ws": "^8.21.0",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.14.0",
+    "@types/ws": "^8.18.1",
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^41.2.0",
+    "electron-builder": "^26.8.1",
+    "electron-rebuild": "^3.2.9",
+    "tailwindcss": "^4.1.14",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0",
+    "wait-on": "^9.0.5"
+  }
+}
