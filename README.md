@@ -65,31 +65,16 @@ Drocsid is designed to be fully self-hostable. To run your own instance, you nee
 ### 1. Supabase (Database, Auth, Storage) - Self-Hosted
 Drocsid uses Supabase for database management, user authentication, and real-time database updates.
 
-By default, Drocsid uses **Supabase Auth** for local email/password authentication. Google OAuth is optional and only needs to be configured if you want to expose Google Sign-In in the login UI.
-
 1. **Deploy Supabase**: You can self-host Supabase using Docker. Clone the [Supabase Docker repository](https://github.com/supabase/supabase/tree/master/docker) and follow their instructions to spin up the containers via `docker-compose up -d`.
-2. **Configure Supabase Auth for local login**: In your self-hosted Supabase auth configuration (`docker-compose.yml` or the environment file it loads), make sure local email/password auth is enabled and email confirmation is disabled if you want accounts to work immediately after signup.
-
-   Recommended auth-related values:
-   ```env
-   ENABLE_EMAIL_SIGNUP=true
-   ENABLE_EMAIL_AUTOCONFIRM=true
-   GOTRUE_SITE_URL=https://drocsid.yourdomain.com
-   ```
-
-   Notes:
-   - `ENABLE_EMAIL_SIGNUP=true` enables local email/password account creation.
-   - `ENABLE_EMAIL_AUTOCONFIRM=true` allows local accounts to be used immediately without email validation.
-   - `GOTRUE_SITE_URL` must point to your Drocsid app URL, not the Supabase domain.
-3. **Run the Schema**: Once your Supabase instance is running and accessible via the studio UI (usually `http://localhost:8000`), navigate to the **SQL Editor** tab. Paste and run the entire contents of the `supabase.sql` file located in the root of this repository. This creates all necessary tables, RLS policies, functions, and triggers.
+2. **Run the Schema**: Once your Supabase instance is running and accessible via the studio UI (usually `http://localhost:8000`), navigate to the **SQL Editor** tab. Paste and run the entire contents of the `supabase.sql` file located in the root of this repository. This creates all necessary tables, RLS policies, functions, and triggers.
    > **⚠️ IMPORTANT - Super Admin Setup**: Before running `supabase.sql`, open the file and replace all occurrences of `admin@example.com` with your own email address. This ensures your account is automatically granted Super Admin status and unlimited server creation quotas.
-4. **Configure Authentication (Google) - OPTIONAL**: Only do this if you want to expose Google login in Drocsid. Go to **Authentication > Providers**. Enable Google and enter your Client ID and Secret. Ensure the Redirect URL is `https://<your-supabase-domain>/auth/v1/callback`.
-5. **Storage Buckets**: In Supabase Storage, create the following **public** buckets:
+3. **Configure Authentication (Google)**: Go to **Authentication > Providers**. Enable Google and enter your Client ID and Secret. Ensure the Redirect URL is `https://<your-supabase-domain>/auth/v1/callback`.
+4. **Storage Buckets**: In Supabase Storage, create the following **public** buckets:
    - `avatars` (User profile pictures)
    - `server-icons` (Server logos)
-   - `chat-attachments` (File sharing in messages)
-   - `soundboard` (Custom server emojis)
-6. **Enable Realtime**: Ensure realtime broadcasting is enabled for the `channels`, `messages`, `profiles`, `roles`, and `server_members` tables within the Supabase Database settings.
+   - `attachments` (File sharing in messages)
+   - `emojis` (Custom server emojis)
+5. **Enable Realtime**: Ensure realtime broadcasting is enabled for the `channels`, `messages`, `profiles`, `roles`, and `server_members` tables within the Supabase Database settings.
 
 ---
 
@@ -103,7 +88,7 @@ Drocsid relies on LiveKit's robust WebRTC infrastructure for high-quality audio,
 
 ---
 
-### 3. Mobile Push Notifications (Expo Push API) - (if mobile version is used and you want to enable push notifications)
+### 3. Mobile Push Notifications (Expo Push API)
 Drocsid mobile (React Native / Expo) uses native Expo Push tokens stored automatically in PostgreSQL (`expo_push_tokens` table) to deliver background push alerts. No external VAPID key generation is needed!
 
 ---
@@ -114,7 +99,7 @@ Once your prerequisites are running, install and configure the Drocsid app:
 
 1. **Clone the repository**:
 ```bash
-git clone https://github.com/dr0csid/drocsid.git
+git clone https://github.com/your-repo/drocsid.git
 cd drocsid
 ```
 
@@ -144,7 +129,6 @@ LIVEKIT_API_SECRET=your_livekit_api_secret
 VITE_BACKEND_URL=http://localhost:3000
 PORT=3000
 VITE_SUPERADMIN_EMAIL=your_email@domain.com
-VITE_ENABLE_GOOGLE_AUTH= # Set to true to show Google login button on authentication page
 ```
 
 > **💡 Understanding Super Admin (`VITE_SUPERADMIN_EMAIL` vs `supabase.sql`)**:
@@ -187,7 +171,7 @@ Drocsid implements a "Zero-Trust" mindset for server management:
 
 If you encounter issues while setting up or running your private Drocsid instance, consult this troubleshooting guide.
 
-### 1. 🔑 Google Auth Redirection Fails (if enabled)
+### 1. 🔑 Google Auth / Supabase Auth Redirection Fails
 * **Symptom:** After clicking "Login with Google", you are redirected to a blank page, or get an error message like `Invalid redirect URI`, or you are redirected back to the wrong domain.
 * **Causes:**
   - The Redirect URLs in your Google Cloud Console do not match your Supabase settings.
@@ -211,7 +195,7 @@ If you encounter issues while setting up or running your private Drocsid instanc
 
 ---
 
-### 2. 👑 The Super Admin Dashboard Button Does Not Appear (red shield icon at the bottom left)
+### 2. 👑 The Super Admin Dashboard Button Does Not Appear
 * **Symptom:** You log in, but you don't see the "Super Admin" settings/dashboard button.
 * **Causes:**
   - You did not update the default email addresses in `supabase.sql` before running the schema.
@@ -282,5 +266,35 @@ If you encounter issues while setting up or running your private Drocsid instanc
 
 ---
 
-*Drocsid - Communicate without limits.*
+### 7. ⚡ Erreur Realtime WebSocket (400 Bad Request)
+* **Symptom:** Des erreurs de type `wss://supabase.drocsid.site/realtime/v1/websocket?apikey=... [HTTP/1.1 400 Bad Request]` apparaissent dans la console du navigateur et les mises à jour en temps réel ne fonctionnent pas.
+* **Causes:**
+  - Les connexions WebSocket exigent un protocole d'échange spécifique appelé *Upgrade Handshake* (la connexion HTTP doit être "surclassée" en WebSocket).
+  - Si ton reverse proxy (très probablement Nginx) qui écoute sur `supabase.drocsid.site` n'est pas explicitement configuré pour relayer les en-têtes d'upgrade WebSocket vers ton conteneur Kong (port 8000), Nginx rejette la connexion ou ne la transmet pas correctement, ce qui renvoie une erreur HTTP 400 Bad Request au navigateur.
+* **Solutions:**
+  - Dans le fichier de configuration Nginx de ton sous-domaine `supabase.drocsid.site` (généralement situé dans `/etc/nginx/sites-available/` ou `/etc/nginx/conf.d/`), assure-toi que les en-têtes d'upgrade sont correctement configurés.
+  - Voici le bloc de configuration Nginx idéal pour ton sous-domaine Supabase :
+    ```nginx
+    server {
+        server_name supabase.drocsid.site;
 
+        location / {
+            proxy_pass http://localhost:8000; # Redirection vers le Kong de Supabase
+            
+            # --- CONFIGURATION CRITIQUE POUR LES WEBSOCKETS ---
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            # --------------------------------------------------
+
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+    ```
+
+---
+
+*Drocsid - Speak freely. Stay anonymous.*
